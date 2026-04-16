@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -113,12 +114,20 @@ function verifyHmac(rawBody, hmacHeader) {
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 
+// Rate limiter — drops excessive requests before they reach HMAC verification
+const webhookLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Health check — used by hosting platforms and uptime monitors
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // Shopify requires the raw body for HMAC verification, so we use express.raw
 // on this route only rather than global express.json()
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook', webhookLimiter, express.raw({ type: 'application/json' }), async (req, res) => {
   const hmac = req.headers['x-shopify-hmac-sha256'];
   if (!hmac || !verifyHmac(req.body, hmac)) {
     return res.status(401).send('Unauthorized');
