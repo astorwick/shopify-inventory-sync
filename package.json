@@ -1,0 +1,17 @@
+{
+  "name": "shopify-inventory-sync",
+  "version": "1.0.0",
+  "description": "Syncs Shopify inventory across variants sharing the same SKU",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  }
+}
